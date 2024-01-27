@@ -160,15 +160,10 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        # 'django': {
-        #     'handlers': ['file'],
-        #     'level': 'DEBUG',
-        #     'propagate': True,
-        # },
     },
     "formatters": {
         "verbose": {
-            "format": "{name} {levelname} {asctime} {module} {message}",
+            "format": "[{levelname}:{asctime}] \t{name} \t{module} \t{message}",
             "style": "{",
         },
         "simple": {

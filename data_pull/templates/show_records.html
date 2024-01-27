@@ -224,18 +224,17 @@
                 {% endif %}
             </div>
             <div class="prediction-section" style="font-size: 40px; color: #333;">
-                Next Issue Number: {{ next_issue_number }} 
+                Next Period Number: {{ next_issue_number }} 
             </div>
         </div>
     </div>
 
     <table>
         <tr>
-            <th>Issue Number</th>
+            <th>Period Number</th>
             <th>Number</th>
             <th>Size</th>
             <th>Colour</th>
-            <th>Premium</th>
             <th>Prediction</th>
             <th>Result</th>
             <th>Level</th>
@@ -246,7 +245,6 @@
                 <td>{{ record.number }}</td>
                 <td>{{ record.size }}</td>
                 <td>{{ record.colour }}</td>
-                <td>{{ record.premium }}</td>
                 <td>{{ record.size_prediction }}</td>
                 <td>{{ record.result }}</td>
                 <td>{{ record.level }}</td>

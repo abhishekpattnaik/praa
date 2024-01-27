@@ -69,8 +69,8 @@ def fetch_new_records(request) -> dict:
     template_data = dict(
             records = your_page,
             your_page = your_page,
-            win_percentage = (total_wins/total_record) * 100,
-            loss_percentage = ((total_record - total_wins)/total_record) * 100,
+            win_percentage = round((total_wins/total_record) * 100),
+            loss_percentage = round(((total_record - total_wins)/total_record) * 100),
             total_records = total_record,
             total_wins = total_wins,
             total_losses = total_record - total_wins,
