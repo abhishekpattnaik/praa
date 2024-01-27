@@ -184,6 +184,15 @@
             <a href="#"><i class="fas fa-home"></i> Home</a>
             <a href="#"><i class="fas fa-info-circle"></i> About</a>
         </div>
+        <div>
+            {% if request.user.is_authenticated %}
+            <!-- Use a form to trigger the POST request for logout -->
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </form>
+        {% endif %}
+        </div>
     </nav>
 
     <header>
@@ -294,7 +303,7 @@
         // Start the countdown when the page is loaded
         window.onload = function () {
             // Set the duration in seconds (1 minute = 60 seconds)
-            var durationInSeconds = 60;
+            var durationInSeconds = {{ reload_after_delta }};
             startCountdown(durationInSeconds);
         };
     </script>

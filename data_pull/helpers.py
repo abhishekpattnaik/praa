@@ -1,5 +1,6 @@
 import json
 import requests
+from datetime import datetime
 
 from django.forms.models import model_to_dict
 from django.core.paginator import Paginator
@@ -32,7 +33,6 @@ class RequestData:
     def get_data(self) -> list:
         response = requests.request("POST", self.url, headers=self.headers, data=self.payload)
         d = json.loads(response.text)
-        # df = DataFrame(d["data"]["list"])
         if response.status_code == 200:
             return d["data"]["list"]
 
@@ -49,7 +49,7 @@ def get_predicted_size(premium: int = 0) -> str:
 
 def fetch_new_records(request) -> dict:
 
-    last_object = Record.objects.latest("created_at")
+    last_object = Record.objects.latest("issue_number")
     items_per_page = 60
     records = [model_to_dict(obj) for obj in Record.objects.filter(level__gt = 0).order_by('-issue_number')]
     total_record = len(records)
@@ -64,7 +64,8 @@ def fetch_new_records(request) -> dict:
     paginator = Paginator(records, items_per_page)
     page = request.GET.get('page', 1)
     your_page = paginator.get_page(page)
-
+    reloading_time = 62 - datetime.now().second
+    
     template_data = dict(
             records = your_page,
             your_page = your_page,
@@ -73,7 +74,8 @@ def fetch_new_records(request) -> dict:
             total_records = total_record,
             total_wins = total_wins,
             total_losses = total_record - total_wins,
-            next_prediction = get_predicted_size(last_object.premium),
-            next_issue_number = last_object.issue_number + 1
+            next_prediction = get_predicted_size(last_object.premium).upper(),
+            next_issue_number = last_object.issue_number + 1,
+            reload_after_delta = reloading_time
         )
     return template_data

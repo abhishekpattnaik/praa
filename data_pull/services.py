@@ -6,15 +6,12 @@ def update_data_from_third_party_api():
     try:
         request_obj = RequestData()
         data = request_obj.get_data()
-        # import pdb;pdb.set_trace()
-        # Update your database with the fetched data
+
         for item in data:
             predicted_size, level, real_size, is_win = Record.BIG, 0, Record.BIG, True
             if Record.objects.exists():
                 try:
-                # if Record.objects.get(issue_number = int(item['issueNumber']) - 1):
                     last_obj = Record.objects.get(issue_number = int(item['issueNumber']) - 1)
-                # else:
                 except Record.DoesNotExist as e:
                     last_obj = Record.objects.latest("created_at")
 
@@ -30,19 +27,18 @@ def update_data_from_third_party_api():
                     level = 1
 
             if not Record.objects.filter(issue_number=item['issueNumber']).exists():
-            # Check if the record already exists, update it, or create a new one
                 obj = Record.objects.get_or_create(
                     issue_number=item['issueNumber'],
                     number = item['number'],
                     premium = item['premium'],
                     colour = item['colour'],
-                    size_prediction = predicted_size,
+                    size_prediction = predicted_size.upper(),
                     level = level,
                     size = real_size,
                     is_win = is_win
                 )
 
-            _l.logger.debug("Record added: %s\t",str(obj))
+                _l.logger.debug("Record added: %s\t",str(obj))
     except Exception as e:
         _l.logger.exception(e)
         raise e
