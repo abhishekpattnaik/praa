@@ -213,10 +213,9 @@
             <p>Loss Percentage: {{ loss_percentage }}%</p>
         </div>
         <div id="countdown" style="font-size: 50px; color: #333;">
-            <div>Reloading in: <span id="countdown-text">60</span><br></div>
+            <div>Next Prediction In: <span id="countdown-text">60</span><br>seconds<br></div>
             <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">
                 Next Prediction:
-                
                 {% if next_prediction == 'BIG' %}
                     <span style="color: rgb(86, 156, 113);"><br>BIG<br></span>
                 {% else %}
