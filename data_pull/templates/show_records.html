@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Records</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            color: #495057;
+        }
+
+        header {
+            background-color: #828d99;
+            padding: 20px 0;
+            color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        nav {
+            background-color: #343a40;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #ddd;
+            padding: 10px 15px;
+            margin-right: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #555;
+        }
+
+        .prediction-section {
+            margin: 20px 0;
+            font-size: 24px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .prediction-section:hover {
+            transform: scale(1.05);
+        }
+
+        .chart-section {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-section div {
+            flex: 1;
+            min-width: 300px;
+            margin: 0 10px 20px;
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .chart-section div:hover {
+            transform: scale(1.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #343a40;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        tr.win {
+            background-color: #c8e6c9;
+        }
+
+        tr.loss {
+            background-color: #ffcdd2;
+        }
+
+        .pagination {
+            margin-top: 20px;
+        }
+
+        .step-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .step-links a {
+            text-decoration: none;
+            color: #333;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 0 5px;
+            transition: background-color 0.3s;
+        }
+
+        .step-links a:hover {
+            background-color: #555;
+            color: white;
+        }
+
+        /* Media query for smaller screens */
+        @media (max-width: 768px) {
+            .chart-section {
+                flex-direction: column; /* Stack items vertically */
+            }
+
+            .chart-section div {
+                flex: 1 1 100%; /* Take full width */
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <nav>
+        <div>
+            <a href="#"><i class="fas fa-home"></i> Home</a>
+            <a href="#"><i class="fas fa-info-circle"></i> About</a>
+        </div>
+    </nav>
+
+    <header>
+        <br><br><br>
+        <h1>Welcome to Daman Analytics</h1>
+    </header>
+
+    <div class="chart-section">
+        <div>
+            <canvas id="barChart" width="300" height="200"></canvas>
+            <p>Total Records: {{ total_records }}</p>
+            <p>Total Wins: {{ total_wins }}</p>
+            <p>Total Losses: {{ total_losses }}</p>
+        </div>
+        <div>
+            <canvas id="pieChart" width="300" height="200"></canvas>
+            <p>Win Percentage: {{ win_percentage }}%</p>
+            <p>Loss Percentage: {{ loss_percentage }}%</p>
+        </div>
+        <div id="countdown" style="font-size: 50px; color: #333;">
+            <div>Reloading in: <span id="countdown-text">60</span><br></div>
+            <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">
+                Next Prediction:
+                
+                {% if next_prediction == 'BIG' %}
+                    <span style="color: rgb(86, 156, 113);"><br>BIG<br></span>
+                {% else %}
+                    <span style="color: rgb(86, 156, 113);"><br>SMALL<br></span>
+                {% endif %}
+            </div>
+            <div class="prediction-section" style="font-size: 40px; color: #333;">
+                Next Issue Number: {{ next_issue_number }} 
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <tr>
+            <th>Issue Number</th>
+            <th>Number</th>
+            <th>Size</th>
+            <th>Colour</th>
+            <th>Premium</th>
+            <th>Prediction</th>
+            <th>Result</th>
+            <th>Level</th>
+        </tr>
+        {% for record in records %}
+            <tr class="{% if record.result == 'WIN' %}win{% elif record.result == 'LOSS' %}loss{% endif %}">
+                <td>{{ record.issue_number }}</td>
+                <td>{{ record.number }}</td>
+                <td>{{ record.size }}</td>
+                <td>{{ record.colour }}</td>
+                <td>{{ record.premium }}</td>
+                <td>{{ record.size_prediction }}</td>
+                <td>{{ record.result }}</td>
+                <td>{{ record.level }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <div class="pagination">
+        <div class="step-links">
+            {% if your_page.has_previous %}
+                <a href="?page=1"><i class="fas fa-angle-double-left"></i> first</a>
+                <a href="?page={{ your_page.previous_page_number }}"><i class="fas fa-angle-left"></i> previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ your_page.number }} of {{ your_page.paginator.num_pages }}.
+            </span>
+
+            {% if your_page.has_next %}
+                <a href="?page={{ your_page.next_page_number }}"><i class="fas fa-angle-right"></i> next</a>
+                <a href="?page={{ your_page.paginator.num_pages }}"><i class="fas fa-angle-double-right"></i> last</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Function to reload the page after 1 minute
+        function reloadPage() {
+            location.reload();
+        }
+    
+        // Countdown function
+        function startCountdown(durationInSeconds) {
+            var countdownElement = document.getElementById('countdown-text');
+            var countdown = durationInSeconds;
+    
+            function updateCountdown() {
+                countdownElement.textContent = countdown;
+                countdown--;
+    
+                if (countdown < 0) {
+                    // Reload the page when countdown reaches 0
+                    reloadPage();
+                } else {
+                    // Call the function recursively every second
+                    setTimeout(updateCountdown, 1000);
+                }
+            }
+    
+            // Start the initial countdown
+            updateCountdown();
+        }
+    
+        // Start the countdown when the page is loaded
+        window.onload = function () {
+            // Set the duration in seconds (1 minute = 60 seconds)
+            var durationInSeconds = 60;
+            startCountdown(durationInSeconds);
+        };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctxBar = document.getElementById('barChart').getContext('2d');
+        var ctxPie = document.getElementById('pieChart').getContext('2d');
+
+        var barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Total Records', 'Total Wins', 'Total Losses'],
+                datasets: [{
+                    label: 'Statistics',
+                    data: [{{ total_records }}, {{ total_wins }}, {{ total_losses }}],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 99, 132, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var pieChart = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['Win Percentage', 'Loss Percentage'],
+                datasets: [{
+                    data: [{{ win_percentage }}, {{ loss_percentage }}],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(255, 99, 132, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
