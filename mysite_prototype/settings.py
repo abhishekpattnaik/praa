@@ -179,7 +179,7 @@ LOGGING = {
 }
 
 CRONJOBS = [
-    ('* * * * 1', 'data_pull.services.update_data_from_third_party_api')
+    ('*/1 * * * *', 'data_pull.services.update_data_from_third_party_api')
 
 ]
 # data_pull/management/commands/pull_records.py
