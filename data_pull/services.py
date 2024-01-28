@@ -11,12 +11,16 @@ def update_data_from_third_party_api():
             predicted_size, level, real_size, is_win = Record.BIG, 0, Record.BIG, True
             if Record.objects.exists():
                 try:
-                    last_obj = Record.objects.get(issue_number = int(item['issueNumber']) - 1)
-                except Record.DoesNotExist as e:
-                    last_obj = Record.objects.latest("created_at")
+                    query_set = Record.objects.all().order_by("-issue_number")
+                    last_obj = query_set[0]
+                    second_last_obj = query_set[1]
+                except Exception as e:
+                    # last_obj = Record.objects.latest("created_at")
+                    _l.logger.exception(e)
+                    return
 
                 last_level = 0 if not last_obj else last_obj.level
-                predicted_size = get_predicted_size(last_obj.premium)
+                _, predicted_size = get_predicted_size(last_obj.premium, second_last_obj.premium)
                 real_size = get_size(int(item['number']))
                 is_win = True
             

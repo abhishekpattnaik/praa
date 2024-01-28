@@ -225,6 +225,9 @@
             <div class="prediction-section" style="font-size: 40px; color: #333;">
                 Next Period Number: {{ next_issue_number }} 
             </div>
+            <div class="prediction-section" style="font-size: 40px; color: #333;">
+                Next Prediction Number: {{ next_number_prediction }} 
+            </div>
         </div>
     </div>
 
@@ -235,6 +238,7 @@
             <th>Size</th>
             <th>Colour</th>
             <th>Prediction</th>
+            <!-- <th>Number</th> -->
             <th>Result</th>
             <th>Level</th>
         </tr>
@@ -245,6 +249,7 @@
                 <td>{{ record.size }}</td>
                 <td>{{ record.colour }}</td>
                 <td>{{ record.size_prediction }}</td>
+                <!-- <td>{{ record.next_issue_number }}</td> -->
                 <td>{{ record.result }}</td>
                 <td>{{ record.level }}</td>
             </tr>

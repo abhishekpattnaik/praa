@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.forms.models import model_to_dict
 from django.core.paginator import Paginator
-
+from common.logging_helper import cron_logging as _l
 from data_pull.models import Record
 
 class RequestData:
@@ -31,28 +31,50 @@ class RequestData:
             )
 
     def get_data(self) -> list:
-        response = requests.request("POST", self.url, headers=self.headers, data=self.payload)
-        d = json.loads(response.text)
-        if response.status_code == 200:
-            return d["data"]["list"]
+        try:
+            response = requests.request("POST", self.url, headers=self.headers, data=self.payload)
+            if response.status_code == 200:
+                d = json.loads(response.text)
+                return d["data"]["list"]
+            raise
+        except Exception as e:
+            _l.logger.exception(e)
+            _l.logger.error("Failed to fetch data from the API. Status code: %s",response.status_code)
+            return []
 
-        print(f"Failed to fetch data from the API. Status code: {response.status_code}")
-        return []
+from django.db.models.query import QuerySet
+def list_latest_records() -> QuerySet[Record]:
+    return Record.objects.filter(level__gt = 0).order_by('-issue_number')
 
 def get_size(number) -> str:
     return Record.BIG if number > 4 else Record.SMALL
 
-def get_predicted_size(premium: int = 0) -> str:
-    if premium == 0: premium = Record.objects.latest("created_at").premium
-    hashed_value = abs(sum([int(i) for i in str(int(premium / 10))])) % 10
-    return get_size(hashed_value)
+def get_predicted_size(last_premium: int, second_last_premium: int) -> (int, str):
+
+    ############################ Formula No.1 ################################
+    # if last_premium == 0 and :
+    #     pass
+    # if premium == 0: premium = Record.objects.latest("created_at").premium
+    # hashed_value = abs(sum([int(i) for i in str(int(premium / 10))])) % 10
+
+
+    ############################ Formula No.2 ################################
+    if (last_premium % second_last_premium) == 0:
+        number = int(str(last_premium)[-1])
+    else: 
+        number = int(str(last_premium / second_last_premium).split(".")[1][:7][-1])
+
+    _l.logger.info("the predicted number> last premium:%s / second last premium:%s = %s, after calculations:%s ", str(last_premium), str(second_last_premium), str(last_premium / second_last_premium), str(number))
+    
+    return number, get_size(number)
 
 def fetch_new_records(request) -> dict:
-
-    last_object = Record.objects.latest("issue_number")
+    records_queryset = list_latest_records()
+    last_object = records_queryset[0]
+    second_last_obj = records_queryset[1]
     items_per_page = 60
-    records = [model_to_dict(obj) for obj in Record.objects.filter(level__gt = 0).order_by('-issue_number')]
-    total_record = len(records)
+    records = [model_to_dict(obj) for obj in records_queryset]
+    total_record = records_queryset.count()
     total_wins = 0
     for i in records:
         if i["is_win"]:
@@ -64,7 +86,7 @@ def fetch_new_records(request) -> dict:
     paginator = Paginator(records, items_per_page)
     page = request.GET.get('page', 1)
     your_page = paginator.get_page(page)
-    reloading_time = 62 - datetime.now().second
+    next_number_prediction, next_size_prediction = get_predicted_size(last_object.premium, second_last_obj.premium)
     
     template_data = dict(
             records = your_page,
@@ -74,8 +96,9 @@ def fetch_new_records(request) -> dict:
             total_records = total_record,
             total_wins = total_wins,
             total_losses = total_record - total_wins,
-            next_prediction = get_predicted_size(last_object.premium).upper(),
+            next_prediction = next_size_prediction.upper(),
+            next_number_prediction = next_number_prediction,
             next_issue_number = last_object.issue_number + 1,
-            reload_after_delta = reloading_time
+            reload_after_delta = 62 - datetime.now().second
         )
     return template_data
