@@ -62,7 +62,7 @@ def get_position(issue_number:int) -> int:
     elif issue_number == 9: return 1
     # return -1
     
-def get_predicted_size(last_premium: int, second_last_premium: int, next_predicted_number: int) -> (int, str):
+def predict_next_record(last_premium: int, second_last_premium: int, next_issue_number: int) -> (int, str, str):
 
     ############################ Formula No.1 ################################
     # if last_premium == 0 and :
@@ -73,18 +73,28 @@ def get_predicted_size(last_premium: int, second_last_premium: int, next_predict
 
     ############################ Formula No.2 ################################
     if (last_premium % second_last_premium) == 0:
-        number = int(str(last_premium)[-1])
+        predicted_number = int(str(last_premium)[-1])
     else:
-        number = int(str(last_premium / second_last_premium).split(".")[1][:get_position(next_predicted_number % 10)][-1])
+        predicted_number = int(str(last_premium / second_last_premium).split(".")[1][:get_position(next_issue_number % 10)][-1])
 
-    _l.logger.info("the predicted number> last premium:%s / second last premium:%s = %s, after calculations:%s ", str(last_premium), str(second_last_premium), str(last_premium / second_last_premium), str(number))
-    
-    return number, get_size(number)
+    predicted_size = get_size(predicted_number)
+
+    if predicted_number == 0:
+        predicted_color = Record.COLOR_0
+    elif predicted_number == 5:
+        predicted_color = Record.COLOR_5
+    elif (predicted_number % 2) == 0:
+        predicted_color = Record.COLOR_EVEN
+    else:
+        predicted_color = Record.COLOR_ODD
+
+    _l.logger.info("[Prediction] Next Issue Number: %s, Next Predicted Number: %s, Next Predicted Size: %s, Next Predicted Colour: %s", next_issue_number, predicted_number, predicted_size, predicted_color)
+    return predicted_number, predicted_size, predicted_color
 
 def fetch_new_records(request) -> dict:
     records_queryset = list_latest_records()
-    last_object = records_queryset[0]
-    second_last_obj = records_queryset[1]
+    if records_queryset.count() < 7:
+        return {}
     items_per_page = 60
     records = [model_to_dict(obj) for obj in records_queryset]
     total_record = records_queryset.count()
@@ -99,19 +109,25 @@ def fetch_new_records(request) -> dict:
     paginator = Paginator(records, items_per_page)
     page = request.GET.get('page', 1)
     your_page = paginator.get_page(page)
-    next_number_prediction, next_size_prediction = get_predicted_size(records_queryset[4].premium, records_queryset[5].premium, last_object.issue_number + 1)
+    next_number_prediction, next_size_prediction, next_colour_prediction = predict_next_record(records_queryset[4].premium, 
+                                                                                               records_queryset[5].premium, 
+                                                                                               records_queryset[0].issue_number + 1)
     
     template_data = dict(
             records = your_page,
             your_page = your_page,
+            
             win_percentage = round((total_wins/total_record) * 100),
             loss_percentage = round(((total_record - total_wins)/total_record) * 100),
             total_records = total_record,
             total_wins = total_wins,
             total_losses = total_record - total_wins,
-            next_prediction = next_size_prediction.upper(),
+
+            next_issue_number = records_queryset[0].issue_number + 1,
             next_number_prediction = next_number_prediction,
-            next_issue_number = last_object.issue_number + 1,
+            next_size_prediction = next_size_prediction.upper(),
+            next_colour_prediction = Record.COLOR_EVEN if Record.COLOR_EVEN in next_colour_prediction else Record.COLOR_ODD,
+
             reload_after_delta = 62 - datetime.now().second
         )
     return template_data

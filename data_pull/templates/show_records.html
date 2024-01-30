@@ -118,17 +118,20 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            
         }
 
         th, td {
             padding: 15px;
-            text-align: left;
+            text-align: center;
             border-bottom: 1px solid #ddd;
         }
 
         th {
             background-color: #343a40;
             color: white;
+            font-weight: 800;
+            font-size: 25px;
         }
 
         tr:hover {
@@ -141,6 +144,13 @@
 
         td.loss {
             background-color: #ffcdd2;
+        }
+
+        td.predNumber {
+            background-color: #c8e6c9;
+            /* color: #268302; */
+            font-weight: 800;
+            font-size: 50px;
         }
 
         td.even {
@@ -217,32 +227,14 @@
     </header>
 
     <div class="chart-section">
-        <!-- <p>
-            <div>Total Records: {{ total_records }}</div>
-            <div>Total Wins: {{ total_wins }}</div>
-            <div>Total Losses: {{ total_losses }}</div>
-            <div>Win Percentage: {{ win_percentage }}%</div>
-            <div>Loss Percentage: {{ loss_percentage }}%</div>
-        </p> -->
         <div id="countdown" style="font-size: 50px; color: #333;">
             <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">Next Prediction In: <span id="countdown-text">60 seconds</span><br></div>
             <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">Next Prediction: 
                 <span> {{ next_issue_number }} </span>
-                {% if next_prediction == 'BIG' %}
-                    <span style="color: rgb(86, 156, 113);">BIG</span>
-                {% else %}
-                    <span style="color: rgb(86, 156, 113);">SMALL</span>
-                {% endif %}
-                <!-- <span>{% if next_prediction == 'BIG' %} BIG {% else %} SMALL {% endif %} </span> -->
+                <span style="color: {{ next_colour_prediction }};">{{ next_size_prediction }}</span>
                 <span> {{ next_number_prediction }} </span> 
                 <span></span>
             </div>
-            <!-- <div class="prediction-section" style="font-size: 40px; color: #333;">
-                Next Period Number: {{ next_issue_number }} 
-            </div>
-            <div class="prediction-section" style="font-size: 40px; color: #333;">
-                Next Prediction Number: {{ next_number_prediction }} 
-            </div> -->
         </div>
     </div>
 
@@ -252,9 +244,9 @@
             <th>Number</th>
             <th>Size</th>
             <th>Colour</th>
-            <th>Prediction</th>
-            <th>Result</th>
-            <th>Level</th>
+            <th>Prediction <br> Number</th>
+            <th>Prediction <br> Size</th>
+            <th>Prediction <br> Colour</th>
         </tr>
         {% for record in records %}
             <tr>
@@ -262,9 +254,10 @@
                 <td class="{% if record.number|divisibleby:2 %}even{% else %}odd{% endif %}">{{ record.number }}</td>
                 <td>{{ record.size }}</td>
                 <td>{{ record.colour }}</td>
-                <td>{{ record.size_prediction }}</td>
-                <td class="{% if record.result == 'WIN' %}win{% elif record.result == 'LOSS' %}loss{% endif %}">{{ record.result }}</td>
-                <td>{{ record.level }}</td>
+                <td style="font-weight: 800; font-size: 50px;" class="{% if record.predicted_number == record.number %}win{% endif %}">{{ record.predicted_number }}</td>
+                <td class="{% if record.predicted_size == record.size %}win{% else %}loss{% endif %}">{{ record.predicted_size }}</td>
+                <td class="{% if record.predicted_colour == record.colour %}win{% else %}loss{% endif %}">{{ record.predicted_colour }}</td>
+
             </tr>
         {% endfor %}
     </table>
