@@ -2,6 +2,7 @@ import json
 import requests
 from datetime import datetime
 
+from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
 from django.core.paginator import Paginator
 from common.logging_helper import cron_logging as _l
@@ -42,14 +43,26 @@ class RequestData:
             _l.logger.error("Failed to fetch data from the API. Status code: %s",response.status_code)
             return []
 
-from django.db.models.query import QuerySet
 def list_latest_records() -> QuerySet[Record]:
     return Record.objects.filter(level__gt = 0).order_by('-issue_number')
 
 def get_size(number) -> str:
     return Record.BIG if number > 4 else Record.SMALL
 
-def get_predicted_size(last_premium: int, second_last_premium: int) -> (int, str):
+def get_position(issue_number:int) -> int:
+    if issue_number == 0: return 8
+    elif issue_number == 1: return 7
+    elif issue_number == 2: return 6
+    elif issue_number == 3: return 5
+    elif issue_number == 4: return 2
+    elif issue_number == 5: return 4
+    elif issue_number == 6: return 9
+    elif issue_number == 7: return 10
+    elif issue_number == 8: return 3
+    elif issue_number == 9: return 1
+    # return -1
+    
+def get_predicted_size(last_premium: int, second_last_premium: int, next_predicted_number: int) -> (int, str):
 
     ############################ Formula No.1 ################################
     # if last_premium == 0 and :
@@ -61,8 +74,8 @@ def get_predicted_size(last_premium: int, second_last_premium: int) -> (int, str
     ############################ Formula No.2 ################################
     if (last_premium % second_last_premium) == 0:
         number = int(str(last_premium)[-1])
-    else: 
-        number = int(str(last_premium / second_last_premium).split(".")[1][:7][-1])
+    else:
+        number = int(str(last_premium / second_last_premium).split(".")[1][:get_position(next_predicted_number % 10)][-1])
 
     _l.logger.info("the predicted number> last premium:%s / second last premium:%s = %s, after calculations:%s ", str(last_premium), str(second_last_premium), str(last_premium / second_last_premium), str(number))
     
@@ -86,7 +99,7 @@ def fetch_new_records(request) -> dict:
     paginator = Paginator(records, items_per_page)
     page = request.GET.get('page', 1)
     your_page = paginator.get_page(page)
-    next_number_prediction, next_size_prediction = get_predicted_size(last_object.premium, second_last_obj.premium)
+    next_number_prediction, next_size_prediction = get_predicted_size(records_queryset[4].premium, records_queryset[5].premium, last_object.issue_number + 1)
     
     template_data = dict(
             records = your_page,

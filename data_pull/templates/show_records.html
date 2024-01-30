@@ -14,6 +14,8 @@
             padding: 0;
             text-align: center;
             color: #495057;
+            width: 100%;
+            height: 100%;
         }
 
         header {
@@ -22,8 +24,10 @@
             color: #fff;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
+            height: 100%;
             position: relative;
             z-index: 1;
+            /* margin: 0 auto; */
         }
 
         h1 {
@@ -131,12 +135,24 @@
             background-color: #f5f5f5;
         }
 
-        tr.win {
+        td.win {
             background-color: #c8e6c9;
         }
 
-        tr.loss {
+        td.loss {
             background-color: #ffcdd2;
+        }
+
+        td.even {
+            color: #a50202;
+            font-weight: 800;
+            font-size: 50px;
+        }
+
+        td.odd {
+            color: #268302;
+            font-weight: 800;
+            font-size: 50px;
         }
 
         .pagination {
@@ -197,37 +213,36 @@
 
     <header>
         <br><br><br>
-        <h1>Welcome to Daman Analytics</h1>
+        <h1>Welcome to Colour Analytics</h1>
     </header>
 
     <div class="chart-section">
-        <div>
-            <canvas id="barChart" width="300" height="200"></canvas>
-            <p>Total Records: {{ total_records }}</p>
-            <p>Total Wins: {{ total_wins }}</p>
-            <p>Total Losses: {{ total_losses }}</p>
-        </div>
-        <div>
-            <canvas id="pieChart" width="300" height="200"></canvas>
-            <p>Win Percentage: {{ win_percentage }}%</p>
-            <p>Loss Percentage: {{ loss_percentage }}%</p>
-        </div>
+        <!-- <p>
+            <div>Total Records: {{ total_records }}</div>
+            <div>Total Wins: {{ total_wins }}</div>
+            <div>Total Losses: {{ total_losses }}</div>
+            <div>Win Percentage: {{ win_percentage }}%</div>
+            <div>Loss Percentage: {{ loss_percentage }}%</div>
+        </p> -->
         <div id="countdown" style="font-size: 50px; color: #333;">
-            <div>Next Prediction In: <span id="countdown-text">60</span><br>seconds<br></div>
-            <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">
-                Next Prediction:
+            <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">Next Prediction In: <span id="countdown-text">60 seconds</span><br></div>
+            <div class="prediction-section" style="font-size: 75%; color: #333; margin-top: 1px;">Next Prediction: 
+                <span> {{ next_issue_number }} </span>
                 {% if next_prediction == 'BIG' %}
-                    <span style="color: rgb(86, 156, 113);"><br>BIG<br></span>
+                    <span style="color: rgb(86, 156, 113);">BIG</span>
                 {% else %}
-                    <span style="color: rgb(86, 156, 113);"><br>SMALL<br></span>
+                    <span style="color: rgb(86, 156, 113);">SMALL</span>
                 {% endif %}
+                <!-- <span>{% if next_prediction == 'BIG' %} BIG {% else %} SMALL {% endif %} </span> -->
+                <span> {{ next_number_prediction }} </span> 
+                <span></span>
             </div>
-            <div class="prediction-section" style="font-size: 40px; color: #333;">
+            <!-- <div class="prediction-section" style="font-size: 40px; color: #333;">
                 Next Period Number: {{ next_issue_number }} 
             </div>
             <div class="prediction-section" style="font-size: 40px; color: #333;">
                 Next Prediction Number: {{ next_number_prediction }} 
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -238,19 +253,17 @@
             <th>Size</th>
             <th>Colour</th>
             <th>Prediction</th>
-            <!-- <th>Number</th> -->
             <th>Result</th>
             <th>Level</th>
         </tr>
         {% for record in records %}
-            <tr class="{% if record.result == 'WIN' %}win{% elif record.result == 'LOSS' %}loss{% endif %}">
+            <tr>
                 <td>{{ record.issue_number }}</td>
-                <td>{{ record.number }}</td>
+                <td class="{% if record.number|divisibleby:2 %}even{% else %}odd{% endif %}">{{ record.number }}</td>
                 <td>{{ record.size }}</td>
                 <td>{{ record.colour }}</td>
                 <td>{{ record.size_prediction }}</td>
-                <!-- <td>{{ record.next_issue_number }}</td> -->
-                <td>{{ record.result }}</td>
+                <td class="{% if record.result == 'WIN' %}win{% elif record.result == 'LOSS' %}loss{% endif %}">{{ record.result }}</td>
                 <td>{{ record.level }}</td>
             </tr>
         {% endfor %}
@@ -310,58 +323,6 @@
         };
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        var ctxBar = document.getElementById('barChart').getContext('2d');
-        var ctxPie = document.getElementById('pieChart').getContext('2d');
 
-        var barChart = new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: ['Total Records', 'Total Wins', 'Total Losses'],
-                datasets: [{
-                    label: 'Statistics',
-                    data: [{{ total_records }}, {{ total_wins }}, {{ total_losses }}],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 99, 132, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 99, 132, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        var pieChart = new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: ['Win Percentage', 'Loss Percentage'],
-                datasets: [{
-                    data: [{{ win_percentage }}, {{ loss_percentage }}],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(255, 99, 132, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            }
-        });
-    </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ def update_data_from_third_party_api():
                     return
 
                 last_level = 0 if not last_obj else last_obj.level
-                _, predicted_size = get_predicted_size(last_obj.premium, second_last_obj.premium)
+                _, predicted_size = get_predicted_size(query_set[4].premium, query_set[5].premium, last_obj.issue_number + 1)
                 real_size = get_size(int(item['number']))
                 is_win = True
             
